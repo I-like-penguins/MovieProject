@@ -27,8 +27,10 @@ with engine.connect() as connection:
     """))
     connection.commit()
 
-def list_movies():
-    """Retrieve all movies from the database."""
+def list_movies(get_all_data=False):
+    """Retrieve all movies from the database.
+    Default set to false, to only return title, year, and rating.
+    True returns all columns"""
     with engine.connect() as connection:
         result = connection.execute(text("SELECT title, year, rating, poster_url FROM movies"))
         movies = result.fetchall()
@@ -36,14 +38,18 @@ def list_movies():
         connection.invalidate()
 
     movie_list = []
-    for row in movies:
-        movie_list.append({"title": row[0], "year": row[1], "rating": row[2]})
+    if not get_all_data:
+        for row in movies:
+            movie_list.append({"title": row[0], "year": row[1], "rating": row[2]})
+    else:
+        for row in movies:
+            movie_list.append({"title": row[0], "year": row[1], "rating": row[2], "poster_url": row[3]})
     engine.dispose()
     return movie_list
 
-def get_movies():
+def get_movies(get_all_data=False):
     """Same as list_movies(). Just for downward compatibility."""
-    return list_movies()
+    return list_movies(get_all_data)
 
 def get_movie(title):
     """Retrieve a single movie by title from the database."""

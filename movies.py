@@ -2,6 +2,11 @@ import random
 #import movie_storage
 import movie_storage_sql
 import data_fetcher as df
+import os
+from dotenv import load_dotenv
+
+from web_generator import load_template, serialize_movie, write_html
+
 
 def print_menu():
     """Prints a basic menu. Does nothing else.
@@ -17,6 +22,7 @@ def print_menu():
     print("5. Random movie")
     print("6. Search movie")
     print("7. Movies sorted alphabetically")
+    print("8. Generate website")
     print("")
 
 
@@ -223,6 +229,22 @@ def print_alphabetical(movies_dict):
         print(f"{movie['title']}: {movie['rating']}")
 
 
+def generate_website(movies):
+    """Generates a website with all movies, their ratings, year and poster. Needs a html-template."""
+    load_dotenv()
+    try:
+        template = load_template(os.getenv("TEMPLATE_PATH"))
+        template = template.replace("__TEMPLATE_TITLE__", os.getenv("TEMPLATE_TITLE"))
+        output_string = f""
+        for movie in movies:
+            print(f"Adding movie {movie['title']} to website.")
+            output_string += serialize_movie(movie)
+        write_html(os.getenv("OUTPUT_PATH"), template.replace("__TEMPLATE_MOVIE_GRID__", output_string))
+    except FileNotFoundError as e:
+        print("Error handling file input/output")
+    finally:
+        print("Website generated successfully.")
+
 def main():
     """Starts with initializing a JSON-file with basic values
     or reads existing JSON-file to fill the list with movies. (old!)
@@ -288,6 +310,8 @@ def main():
             search_movie(movie_storage_sql.get_movies())
         elif menu_choice == 7:
             print_alphabetical(movie_storage_sql.get_movies())
+        elif menu_choice == 8:
+            generate_website(movie_storage_sql.get_movies(True))
         elif menu_choice == 0:
             bln_exit = True
             print(f"Bye!")
