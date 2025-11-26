@@ -1,6 +1,6 @@
 import random
 #import movie_storage
-import movie_storage_sql
+import movie_storage.movie_storage_sql
 import data_fetcher as df
 import os
 from dotenv import load_dotenv
@@ -74,7 +74,7 @@ def list_all_movies_sql():
     """Prints all list-entries if there are any.
     Uses print_all_values(...) for each individual entry,
     with counting."""
-    movies = movie_storage_sql.get_movies()
+    movies = movie_storage.movie_storage_sql.get_movies()
     if not movies:
         print(f"There are no movies in the list.")
         return []
@@ -97,7 +97,9 @@ def add_movie(movies_dict):
         api_data = df.data_fetcher()
         try:
             tmp_movie_json = api_data.return_data(title, False)
-            movie_storage_sql.add_movie(tmp_movie_json["Title"], int(tmp_movie_json["Year"]), float(tmp_movie_json["imdbRating"]), tmp_movie_json["Poster"])
+            if tmp_movie_json["imdbRating"] == "N/A":
+                tmp_movie_json["imdbRating"] = 0.0
+            movie_storage.movie_storage_sql.add_movie(tmp_movie_json["Title"], int(tmp_movie_json["Year"]), float(tmp_movie_json["imdbRating"]), tmp_movie_json["Poster"])
         except KeyError as ke:
             if tmp_movie_json["Response"].lower() == "false":
                 print(f"There is no movie with this title. Back to menu.")
@@ -120,7 +122,7 @@ def delete_movie():
             return
         try:
             print(f"{movies[index_to_delete - 1]['title']} will be deleted!")
-            movie_storage_sql.delete_movie(movies[index_to_delete - 1]['title'])
+            movie_storage.movie_storage_sql.delete_movie(movies[index_to_delete - 1]['title'])
         except:
             print(f"Error handling file input/output")
         print(f"Movie deleted")
@@ -254,7 +256,7 @@ def main():
     corresponding functions which handle each menu point"""
     # initialize movies DB
     try:
-        movies = movie_storage_sql.get_movies()
+        movies = movie_storage.movie_storage_sql.get_movies()
         if not movies:
             # Default list to store the movies as dictionaries (default-values for testing purposes
             movies = [
@@ -274,11 +276,11 @@ def main():
         print(f"Error: {e}")
         movies = []
     for movie in movies:
-        if movie_storage_sql.get_movie(movie["title"]) is None:
+        if movie_storage.movie_storage_sql.get_movie(movie["title"]) is None:
             print(f"Adding movie {movie['title']} to database.")
             tmp_movie_json = df.data_fetcher().return_data(movie["title"], False)
             try:
-                movie_storage_sql.add_movie(tmp_movie_json["Title"], int(tmp_movie_json["Year"]), float(tmp_movie_json["imdbRating"]), tmp_movie_json["Poster"])
+                movie_storage.movie_storage_sql.add_movie(tmp_movie_json["Title"], int(tmp_movie_json["Year"]), float(tmp_movie_json["imdbRating"]), tmp_movie_json["Poster"])
             except KeyError as ke:
                 print(f"Error: {ke}")
     #try:
@@ -303,15 +305,15 @@ def main():
         elif menu_choice == 3:
             delete_movie()
         elif menu_choice == 4:
-            movie_stats(movie_storage_sql.get_movies())
+            movie_stats(movie_storage.movie_storage_sql.get_movies())
         elif menu_choice == 5:
-            random_movie(movie_storage_sql.get_movies())
+            random_movie(movie_storage.movie_storage_sql.get_movies())
         elif menu_choice == 6:
-            search_movie(movie_storage_sql.get_movies())
+            search_movie(movie_storage.movie_storage_sql.get_movies())
         elif menu_choice == 7:
-            print_alphabetical(movie_storage_sql.get_movies())
+            print_alphabetical(movie_storage.movie_storage_sql.get_movies())
         elif menu_choice == 8:
-            generate_website(movie_storage_sql.get_movies(True))
+            generate_website(movie_storage.movie_storage_sql.get_movies(True))
         elif menu_choice == 0:
             bln_exit = True
             print(f"Bye!")

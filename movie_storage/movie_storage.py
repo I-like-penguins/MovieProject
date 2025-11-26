@@ -7,7 +7,7 @@
 import json
 
 # File will be data.json
-FILE_NAME = "data.json"
+FILE_NAME = "../data.json"
 
 
 def get_movies():
