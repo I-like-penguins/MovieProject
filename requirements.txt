@@ -1,0 +1,5 @@
+sqlalchemy
+dotenv
+requests
+os
+json
