@@ -104,7 +104,7 @@ def add_movie(movies_dict):
             if tmp_movie_json["Response"].lower() == "false":
                 print(f"There is no movie with this title. Back to menu.")
         except TypeError as te:
-            print(f"Back to menu.")
+            print(f"Error: {te}. Back to menu.")
 
 def delete_movie():
     """Deletes an entry in the list of movies.
@@ -123,8 +123,8 @@ def delete_movie():
         try:
             print(f"{movies[index_to_delete - 1]['title']} will be deleted!")
             movie_storage.movie_storage_sql.delete_movie(movies[index_to_delete - 1]['title'])
-        except:
-            print(f"Error handling file input/output")
+        except Exception as e:
+            print(f"Error handling file input/output: {e}")
         print(f"Movie deleted")
     except ValueError:
         print(f"You did not enter a number. Please come back when you are sure what to delete.")
@@ -242,47 +242,17 @@ def generate_website(movies):
             print(f"Adding movie {movie['title']} to website.")
             output_string += serialize_movie(movie)
         write_html(os.getenv("OUTPUT_PATH"), template.replace("__TEMPLATE_MOVIE_GRID__", output_string))
-    except FileNotFoundError as e:
-        print("Error handling file input/output")
-    finally:
         print("Website generated successfully.")
+    except FileNotFoundError as e:
+        print("Error handling file input/output.")
 
 def main():
-    """Starts with initializing a JSON-file with basic values
-    or reads existing JSON-file to fill the list with movies. (old!)
-
-
-    Prints the basic menue and directs the user to
+    """Prints the basic menue and directs the user to
     corresponding functions which handle each menu point"""
     # initialize movies DB
-    try:
-        movies = movie_storage.movie_storage_sql.get_movies()
-        if not movies:
-            # Default list to store the movies as dictionaries (default-values for testing purposes
-            movies = [
-                {"title": "The Shawshank Redemption", "rating": 9.5, "year": 2000},
-                {"title": "Pulp Fiction", "rating": 8.8, "year": 2000},
-                {"title": "The Room", "rating": 3.6, "year": 2000},
-                {"title": "The Godfather", "rating": 9.2, "year": 2000},
-                {"title": "The Godfather: Part II", "rating": 9.0, "year": 2000},
-                {"title": "The Dark Knight", "rating": 9.0, "year": 2000},
-                {"title": "12 Angry Men", "rating": 8.9, "year": 2000},
-                {"title": "Everything Everywhere All At Once", "rating": 8.9, "year": 2000},
-                {"title": "Forrest Gump", "rating": 8.8, "year": 2000},
-                {"title": "Star Wars: Episode V", "rating": 8.7, "year": 2000}
-            ]
-            movies = order_movies_database(movies)
-    except Exception as e:
-        print(f"Error: {e}")
+    movies = movie_storage.movie_storage_sql.get_movies()
+    if not movies:
         movies = []
-    for movie in movies:
-        if movie_storage.movie_storage_sql.get_movie(movie["title"]) is None:
-            print(f"Adding movie {movie['title']} to database.")
-            tmp_movie_json = df.data_fetcher().return_data(movie["title"], False)
-            try:
-                movie_storage.movie_storage_sql.add_movie(tmp_movie_json["Title"], int(tmp_movie_json["Year"]), float(tmp_movie_json["imdbRating"]), tmp_movie_json["Poster"])
-            except KeyError as ke:
-                print(f"Error: {ke}")
     #try:
     #    movie_storage.save_movies(movies)  # create file and/or save ordered list if file was tinkered externaly
     #except:
@@ -291,9 +261,8 @@ def main():
     bln_exit = False
     while not bln_exit:
         print_menu()
-        menu_choice = 0
         try:
-            menu_choice = int(input(f"Enter choice (0-10): "))
+            menu_choice = int(input(f"Enter choice (0-8): "))
         except ValueError:
             print(f"Please enter a number between 0 and 10 (inclusive).")
             continue
@@ -301,7 +270,6 @@ def main():
             list_all_movies_sql()
         elif menu_choice == 2:
             add_movie(movies)
-            movies = order_movies_database(movies)
         elif menu_choice == 3:
             delete_movie()
         elif menu_choice == 4:

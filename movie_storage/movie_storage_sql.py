@@ -34,8 +34,6 @@ def list_movies(get_all_data=False):
     with engine.connect() as connection:
         result = connection.execute(text("SELECT title, year, rating, poster_url FROM movies"))
         movies = result.fetchall()
-        connection.commit()
-        connection.invalidate()
 
     movie_list = []
     if not get_all_data:
@@ -44,7 +42,6 @@ def list_movies(get_all_data=False):
     else:
         for row in movies:
             movie_list.append({"title": row[0], "year": row[1], "rating": row[2], "poster_url": row[3]})
-    engine.dispose()
     return movie_list
 
 def get_movies(get_all_data=False):
@@ -65,8 +62,6 @@ def add_movie(title, year, rating, poster_url=""):
             connection.execute(text("INSERT INTO movies (title, year, rating, poster_url) VALUES (:title, :year, :rating, :poster_url);"),
                                {"title": title, "year": year, "rating": rating, "poster_url": poster_url})
             print(f"Movie '{title}' added successfully.")
-            connection.commit()
-            connection.invalidate()
         except Exception as e:
             print(f"Error: {e}")
 
@@ -74,7 +69,7 @@ def delete_movie(title):
     """Delete a movie from the database."""
     if not title:
         return
-    with engine.connect() as connection:
+    with engine.begin() as connection:
         try:
             connection.execute(text("DELETE FROM movies WHERE title=:title"), {"title": title})
             connection.commit()
